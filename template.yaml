@@ -24,7 +24,7 @@ Resources:
       ParentId: !GetAtt
         - CursosApiGateway
         - RootResourceId
-      PathPart: "/"
+      PathPart: "cursos"
 
   CursosApiGatewayCursosDetalheGetResource:
     Type: "AWS::ApiGateway::Resource"
@@ -52,7 +52,7 @@ Resources:
         - StatusCode: 200
         - StatusCode: 400
         - StatusCode: 500
-      OperationName: GET /
+      OperationName: GET /cursos
       ResourceId: !Ref CursosApiGatewayCursosGetResource
       RestApiId: !Ref CursosApiGateway
 
@@ -75,7 +75,7 @@ Resources:
         - StatusCode: 200
         - StatusCode: 400
         - StatusCode: 500
-      OperationName: GET /detalhe
+      OperationName: GET /cursos/detalhe
       ResourceId: !Ref CursosApiGatewayCursosDetalheGetResource
       RestApiId: !Ref CursosApiGateway
 
@@ -110,7 +110,7 @@ Resources:
               !Ref CursosApiGateway,
               "/",
               !Ref Environment,
-              "/GET/",
+              "/GET/cursos",
             ],
           ]
 
@@ -136,6 +136,6 @@ Resources:
               !Ref CursosApiGateway,
               "/",
               !Ref Environment,
-              "/GET/detalhe",
+              "/GET/cursos/detalhe",
             ],
           ]
