@@ -1,0 +1,239 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Escola de software - Blog - BlogPost API
+Parameters:
+  Environment:
+    Description: Environment
+    Type: String
+Resources:
+  BlogPostAPIGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "Api gateway BlogPost - ${Environment}"
+      Description: !Sub "Api gateway for BlogPost - ${Environment}"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      FailOnWarnings: False
+      Mode: overwrite
+
+  BlogPostAPIGatewayBlogPostResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      RestApiId: !Ref BlogPostAPIGateway
+      ParentId: !GetAtt
+        - BlogPostAPIGateway
+        - RootResourceId
+      PathPart: "blogposts"
+
+  BlogPostAPIGatewayBlogPostSearchResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      RestApiId: !Ref BlogPostAPIGateway
+      ParentId: !Ref BlogPostAPIGatewayBlogPostResource
+      PathPart: "search"
+
+  BlogPostAPIGatewayBlogPostPost:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      ApiKeyRequired: False
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 201
+          - StatusCode: 400
+          - StatusCode: 500
+        TimeoutInMillis: 2000
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_PutBlogPostFn/invocations"
+      MethodResponses:
+        - StatusCode: 201
+        - StatusCode: 400
+        - StatusCode: 500
+      OperationName: POST /blogposts
+      ResourceId: !Ref BlogPostAPIGatewayBlogPostResource
+      RestApiId: !Ref BlogPostAPIGateway
+
+  BlogPostAPIGatewayBlogPostSearchGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      ApiKeyRequired: False
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+          - StatusCode: 400
+          - StatusCode: 500
+        TimeoutInMillis: 2000
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_SearchBlogPostFn/invocations"
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+      OperationName: GET /blogposts/search by key
+      ResourceId: !Ref BlogPostAPIGatewayBlogPostSearchResource
+      RestApiId: !Ref BlogPostAPIGateway
+
+  BlogPostAPIGatewayBlogPostGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      ApiKeyRequired: False
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+          - StatusCode: 400
+          - StatusCode: 500
+        TimeoutInMillis: 2000
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_GetBlogPostByKeyFn/invocations"
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+      OperationName: GET /blogposts by key
+      ResourceId: !Ref BlogPostAPIGatewayBlogPostResource
+      RestApiId: !Ref BlogPostAPIGateway
+
+  BlogPostAPIGatewayBlogPostDelete:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      ApiKeyRequired: False
+      HttpMethod: DELETE
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+          - StatusCode: 400
+          - StatusCode: 500
+        TimeoutInMillis: 2000
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_DeleteBlogPostFn/invocations"
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+      OperationName: DELETE /blogposts by key
+      ResourceId: !Ref BlogPostAPIGatewayBlogPostResource
+      RestApiId: !Ref BlogPostAPIGateway
+
+  BlogPostAPIGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: BlogPostAPIGatewayBlogPostPost
+    Properties:
+      RestApiId: !Ref BlogPostAPIGateway
+      Description: !Ref Environment
+      StageName: !Ref Environment
+
+  #########  Permissions #########
+  GetBlogPostResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_GetBlogPostByKeyFn"
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn:
+        Fn::Join:
+          [
+            "",
+            [
+              "arn:",
+              !Ref AWS::Partition,
+              ":execute-api:",
+              !Ref AWS::Region,
+              ":",
+              !Ref AWS::AccountId,
+              ":",
+              !Ref BlogPostAPIGateway,
+              "/",
+              !Ref Environment,
+              "/GET/blogposts",
+            ],
+          ]
+
+  PutBlogPostResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_PutBlogPostFn"
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn:
+        Fn::Join:
+          [
+            "",
+            [
+              "arn:",
+              !Ref AWS::Partition,
+              ":execute-api:",
+              !Ref AWS::Region,
+              ":",
+              !Ref AWS::AccountId,
+              ":",
+              !Ref BlogPostAPIGateway,
+              "/",
+              !Ref Environment,
+              !Sub "/POST/blogposts",
+            ],
+          ]
+
+  DeleteBlogPostResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_DeleteBlogPostFn"
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn:
+        Fn::Join:
+          [
+            "",
+            [
+              "arn:",
+              !Ref AWS::Partition,
+              ":execute-api:",
+              !Ref AWS::Region,
+              ":",
+              !Ref AWS::AccountId,
+              ":",
+              !Ref BlogPostAPIGateway,
+              "/",
+              !Ref Environment,
+              !Sub "/DELETE/blogposts",
+            ],
+          ]
+
+  SearchBlogPostResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_SearchBlogPostFn"
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn:
+        Fn::Join:
+          [
+            "",
+            [
+              "arn:",
+              !Ref AWS::Partition,
+              ":execute-api:",
+              !Ref AWS::Region,
+              ":",
+              !Ref AWS::AccountId,
+              ":",
+              !Ref BlogPostAPIGateway,
+              "/",
+              !Ref Environment,
+              !Sub "/GET/blogposts/search",
+            ],
+          ]
