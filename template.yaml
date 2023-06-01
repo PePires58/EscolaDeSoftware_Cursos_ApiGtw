@@ -24,7 +24,7 @@ Resources:
       ParentId: !GetAtt
         - CursosApiGateway
         - RootResourceId
-      PathPart: ""
+      PathPart: "/"
 
   CursosApiGatewayCursosDetalheGetResource:
     Type: "AWS::ApiGateway::Resource"
