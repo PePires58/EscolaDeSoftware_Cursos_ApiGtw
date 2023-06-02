@@ -108,9 +108,7 @@ Resources:
               !Ref AWS::AccountId,
               ":",
               !Ref CursosApiGateway,
-              "/",
-              !Ref Environment,
-              "/GET/cursos",
+              "/*/GET/cursos"
             ],
           ]
 
@@ -134,8 +132,6 @@ Resources:
               !Ref AWS::AccountId,
               ":",
               !Ref CursosApiGateway,
-              "/",
-              !Ref Environment,
-              "/GET/cursos/detalhe",
+              "/*/GET/cursos/detalhe",
             ],
           ]
