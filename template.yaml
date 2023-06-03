@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Escola de software - Cursos - Api Gateway
+Parameters:
+  Environment:
+    Description: Environment
+    Type: String
+Resources:
+  CursosApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "Escola de Software - Cursos - Api Gateway - ${Environment}"
+      Description: !Sub "Escola de Software - Cursos - Api Gateway - ${Environment}"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      FailOnWarnings: False
+      Mode: overwrite
+
+  CursosApiGatewayCursosGetResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      RestApiId: !Ref CursosApiGateway
+      ParentId: !GetAtt
+        - CursosApiGateway
+        - RootResourceId
+      PathPart: "cursos"
+
+  CursosApiGatewayCursosDetalheGetResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      RestApiId: !Ref CursosApiGateway
+      ParentId: !Ref CursosApiGatewayCursosGetResource
+      PathPart: "detalhe"
+
+  CursosApiGatewayCursosGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      ApiKeyRequired: False
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+          - StatusCode: 400
+          - StatusCode: 500
+        TimeoutInMillis: 2000
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_escoladesoftware-cursos-lambdacursosfn/invocations"
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+      OperationName: GET /cursos
+      ResourceId: !Ref CursosApiGatewayCursosGetResource
+      RestApiId: !Ref CursosApiGateway
+
+  CursosApiGatewayCursosDetalheGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      ApiKeyRequired: False
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+          - StatusCode: 400
+          - StatusCode: 500
+        TimeoutInMillis: 2000
+        Type: AWS_PROXY
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_escoladesoftware-cursos-lambdacursosdetalhefn/invocations"
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+      OperationName: GET /cursos/detalhe
+      ResourceId: !Ref CursosApiGatewayCursosDetalheGetResource
+      RestApiId: !Ref CursosApiGateway
+
+  CursosApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: CursosApiGatewayCursosGet
+    Properties:
+      RestApiId: !Ref CursosApiGateway
+      Description: !Ref Environment
+      StageName: !Ref Environment
+
+  #########  Permissions #########
+  CursosInvokeLambdaCursosBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_escoladesoftware-cursos-lambdacursosfn"
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn:
+        Fn::Join:
+          [
+            "",
+            [
+              "arn:",
+              !Ref AWS::Partition,
+              ":execute-api:",
+              !Ref AWS::Region,
+              ":",
+              !Ref AWS::AccountId,
+              ":",
+              !Ref CursosApiGateway,
+              "/*/GET/cursos"
+            ],
+          ]
+
+  CursosInvokeLambdaCursosDetalheBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}_escoladesoftware-cursos-lambdacursosdetalhefn"
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn:
+        Fn::Join:
+          [
+            "",
+            [
+              "arn:",
+              !Ref AWS::Partition,
+              ":execute-api:",
+              !Ref AWS::Region,
+              ":",
+              !Ref AWS::AccountId,
+              ":",
+              !Ref CursosApiGateway,
+              "/*/GET/cursos/detalhe",
+            ],
+          ]
