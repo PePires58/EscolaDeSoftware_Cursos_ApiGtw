@@ -4,21 +4,22 @@ on:
     branches: [development]
 
 jobs:
-  Deploy-infra:
-    uses: PePires58/ReusableWorkflows/.github/workflows/002_cloudformation_deploy_pipeline.yaml@main
+   Deploy-API-Pipe:
+    uses: PePires58/ReusableWorkflows/.github/workflows/004_apigateway_deploy_full_pipeline.yaml@main
     with: 
       stack-name: "dev-escoladesoftware-cursos-apigateway"
       parameters-file-path: "infra/dev.parameters.json"
+      api-gateway-name: "Escola de Software - Cursos - Api Gateway - dev"
     secrets:
       AWS_BUCKET_DEPLOY: ${{ secrets.AWS_BUCKET_DEPLOY }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  
+
   Pull-request:
     permissions:
       pull-requests: write
     runs-on: ubuntu-latest
-    needs: [Deploy-infra]
+    needs: [Deploy-API-Pipe]
     steps:
       - uses: actions/checkout@v2
       
