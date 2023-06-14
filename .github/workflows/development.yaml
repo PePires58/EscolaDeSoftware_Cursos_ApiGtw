@@ -4,7 +4,8 @@ on:
     branches: [development]
 
 jobs:
-   Deploy-API-Pipe:
+  
+  Deploy-API-Pipe:
     uses: PePires58/ReusableWorkflows/.github/workflows/004_apigateway_deploy_full_pipeline.yaml@main
     with: 
       stack-name: "dev-escoladesoftware-cursos-apigateway"
